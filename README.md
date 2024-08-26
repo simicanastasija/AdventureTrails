@@ -1,0 +1,3 @@
+Aplikacija namenjena avanturistima koji žele da dele informacije i fotografije o avanturističkim destinacijama (planinske staze, mesta za kampovanje, rafting destinacije,...).Korisnici mogu pratiti svoju trenutnu lokaciju i videti druge avanturiste 
+u blizini u realnom vremenu. Aplikacija omogućava korisnicima da dodaju nove avanturističke lokacije, ocenjuju i komentarišu postojeće, kao i da postavljaju izazove, poput dostizanja određenih destinacija. 
+Korisnici dobijaju poene za dodavanje novih lokacija, učestvovanje u avanturama, ocenjivanje i komentarisanje, što doprinosi njihovom rangiranju.
