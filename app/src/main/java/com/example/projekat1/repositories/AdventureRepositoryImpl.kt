@@ -79,4 +79,15 @@ class AdventureRepositoryImpl: AdventureRepository {
         }
     }
 
+    override suspend fun getUserFullName(userId: String): Resource<String> {
+        return try {
+            val document = firestoreInstance.collection("users").document(userId).get().await()
+            val fullName = document.getString("fullName") ?: "Unknown User"
+            Resource.Success(fullName)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Resource.Failure(e)
+        }
+    }
+
 }

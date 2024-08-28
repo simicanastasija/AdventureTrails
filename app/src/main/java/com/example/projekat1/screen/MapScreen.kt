@@ -35,9 +35,14 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.FormatListNumbered
+import androidx.compose.material.icons.filled.LogoDev
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.TableChart
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -222,8 +227,6 @@ fun MapScreen(
                 val markerIcon = if (adventure.userId == currentUserId) {
                     bitmapDescriptorFromVector2(context, R.drawable.markeravantura)
                 } else {
-                    Log.d("TUDJI", user)
-                    currentUserId?.let { Log.d("moj", it) }
                     bitmapDescriptorFromVector2(context, R.drawable.tudjimarker)
                 }
                 Marker(
@@ -246,7 +249,7 @@ fun MapScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(color = Color(0xD0E5D6B3)) // Set the header background color
+                .background(color = Color(0xFFE5D6B3)) // Set the header background color
                 .padding(horizontal = 8.dp, vertical = 4.dp) // Reduced padding
         ) {
             Row(
@@ -255,38 +258,71 @@ fun MapScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // Left side: Search icon
+                IconButton(
+                    onClick = {
+                        // Add search action here
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search",
+                        tint = Color.Black
+                    )
+                }
+
+                // Center: Title
                 Text(
                     text = "AdventureTrails",
                     style = MaterialTheme.typography.h6.copy(fontSize = 18.sp) // Smaller font size
                 )
 
+                // Right side: Icons for filter, table, and log off
                 Row {
-                    // Settings Button
-                    Button(
+                    IconButton(
                         onClick = {
-                            navController.navigate("settingsScreen")
-                        },
-                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF6D4C41)), // Brown color
-                        modifier = Modifier.padding(end = 4.dp) // Reduced space between buttons
+                            // Add filter action here
+                        }
                     ) {
-                        Text("Settings", color = Color.White, fontSize = 14.sp) // Smaller text size
+                        Icon(
+                            imageVector = Icons.Default.FilterList, // Replace with actual filter icon
+                            contentDescription = "Filter",
+                            tint = Color.Black
+                        )
                     }
 
-                    // Log Out Button
-                    Button(
+                    IconButton(
+                        onClick = {
+                            navController.navigate("tableScreen") {
+                                popUpTo("mapScreen") { inclusive = true }
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.TableChart, // Replace with actual table icon
+                            contentDescription = "Table",
+                            tint = Color.Black
+                        )
+                    }
+
+                    IconButton(
                         onClick = {
                             viewModel.logOut()
                             navController.navigate("loginScreen") {
                                 popUpTo("mapScreen") { inclusive = true }
                             }
-                        },
-                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF6D4C41)) // Brown color
+                        }
                     ) {
-                        Text("Log Out", color = Color.White, fontSize = 14.sp) // Smaller text size
+                        Icon(
+                            imageVector = Icons.Default.LogoDev, // Replace with actual log off icon ZAMENII
+                            contentDescription = "Log Out",
+                            tint = Color.Black
+                        )
                     }
                 }
             }
         }
+
 
 
 
@@ -376,6 +412,8 @@ fun MapScreen(
                 }
             }
         }
+
+        //Footer
         BottomAppBar(
             backgroundColor = Color(0xFFE5D6B3), // Color same as header
             contentColor = Color.Black,

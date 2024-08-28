@@ -2,6 +2,7 @@ package com.example.projekat1.viewModel
 
 import android.net.Uri
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -23,11 +24,30 @@ class AdventureViewModel : ViewModel() {
     private val _userAdventures = MutableStateFlow<Resource<List<Adventure>>>(Resource.Success(emptyList()))
     val userAdventures: StateFlow<Resource<List<Adventure>>> get() = _userAdventures
 
+    val _userFullNames = mutableMapOf<String, String>()
+
+    private val _adventureImages = mutableStateMapOf<String, List<String>>()
+    val adventureImages: Map<String, List<String>> get() = _adventureImages
+
     init {
         getAllAdventures()
     }
     fun getAllAdventures() = viewModelScope.launch {
         _adventures.value = repository.getAllAdventures()
+        val adventureList = (adventures.value as? Resource.Success<List<Adventure>>)?.result ?: emptyList()
+
+        adventureList.forEach { adventure ->
+            if (!_userFullNames.containsKey(adventure.userId)) {
+                val fullNameResource = repository.getUserFullName(adventure.userId)
+                if (fullNameResource is Resource.Success) {
+                    _userFullNames[adventure.userId] = fullNameResource.result
+                }
+            }
+            if (adventure.adventureImages.isNotEmpty()) {
+                _adventureImages[adventure.id] =
+                    listOf(adventure.adventureImages[0]) // Assuming the first image URL is used
+            }
+        }
     }
 
 

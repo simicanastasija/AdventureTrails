@@ -8,5 +8,5 @@ object Routes {
     val profileScreen= "profileScreen" // tu cu da stavim settings takodje
     val rankScreen= "rankScreen"
     val filtersScreen= "filtersScreen"
-    val allAdventuresTable= "allAdventuresTable"
+    val tableScreen= "tableScreen"
 }

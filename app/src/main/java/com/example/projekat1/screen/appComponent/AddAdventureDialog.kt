@@ -41,7 +41,7 @@ fun AddAdventureDialog(
     Dialog(onDismissRequest = { onDismiss() }) {
         Surface(
             shape = RoundedCornerShape(16.dp),
-            color = Color(0xE6F0F8E7).copy(alpha = 0.8f),
+            color = Color(0xFFE5D6B3).copy(alpha = 0.8f),
             modifier = Modifier
                 .width(300.dp) // Set a smaller width
                 .height(600.dp) // Set a smaller height
@@ -62,7 +62,7 @@ fun AddAdventureDialog(
                         text = "Add Adventure",
                         style = MaterialTheme.typography.headlineMedium.copy(
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF2E7D32)
+                            color = Color(0xFFE5D6B3)
                         )
                     )
                 }
@@ -147,7 +147,9 @@ fun AddAdventureDialog(
                 ) {
                     Button(
                         onClick = { onDismiss() },
-                        modifier = Modifier.padding(end = 8.dp) // Space between Cancel and Save
+                        modifier = Modifier.padding(end = 8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8B4513))
+                        // Space between Cancel and Save
                     ) {
                         Text("Cancel")
                     }
@@ -158,7 +160,8 @@ fun AddAdventureDialog(
                                 onSave(title, description, type, level, selectedMoreImages.value)
                             }
                             onDismiss()
-                        }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8B4513))
                     ) {
                         Text("Save")
                     }

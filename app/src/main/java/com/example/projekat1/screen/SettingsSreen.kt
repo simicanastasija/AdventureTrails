@@ -47,11 +47,13 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.projekat1.navigation.Routes
 import com.example.projekat1.location.LocationService
+import com.example.projekat1.viewModel.UserAuthViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun SettingsScreen(
-    navController: NavController
+    navController: NavController,
+    viewModel: UserAuthViewModel
 ) {
     val context = LocalContext.current
     val sharedPreferences = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
@@ -224,6 +226,19 @@ fun SettingsScreen(
                             null
                         }
                     )
+                    androidx.compose.material.Button(
+                        onClick = {
+                            viewModel.logOut()
+                            navController.navigate("loginScreen") {
+                                popUpTo("profileScreen") { inclusive = true }
+                            }
+                        },
+                        colors = androidx.compose.material.ButtonDefaults.buttonColors(
+                            backgroundColor = Color.Red
+                        )
+                    ) {
+                        androidx.compose.material.Text("Log Out", color = Color.White)
+                    }
                 }
             }
         }

@@ -12,7 +12,9 @@ import com.example.projekat1.viewModel.UserAuthViewModel
 import com.example.projekat1.screen.LoginScreen
 import com.example.projekat1.screen.RegistrationScreen
 import com.example.projekat1.screen.MapScreen
+import com.example.projekat1.screen.ProfileScreen
 import com.example.projekat1.screen.SettingsScreen
+import com.example.projekat1.screen.TableScreen
 import com.example.projekat1.viewModel.AdventureViewModel
 import com.google.maps.android.compose.rememberCameraPositionState
 
@@ -38,7 +40,17 @@ fun Router ( viewModel: UserAuthViewModel, adventureViewModel : AdventureViewMod
         }
 
         composable(Routes.settingsScreen){
-            SettingsScreen(navController = navController)
+            SettingsScreen(navController = navController, viewModel = viewModel)
+        }
+
+        composable(Routes.profileScreen) {
+            ProfileScreen(    viewModel= adventureViewModel,
+                userAuthViewModel=  viewModel,
+                navController= navController)
+        }
+
+        composable(Routes.tableScreen) {
+            TableScreen(adventureViewModel = adventureViewModel, navController= navController)
         }
     }
 }

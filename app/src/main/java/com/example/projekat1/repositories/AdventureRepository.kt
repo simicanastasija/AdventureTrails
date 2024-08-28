@@ -20,4 +20,6 @@ interface AdventureRepository {
     suspend fun getUserAdventures(
         uid: String
     ): Resource<List<Adventure>>
+
+    suspend fun getUserFullName(userId: String): Resource<String>
 }
