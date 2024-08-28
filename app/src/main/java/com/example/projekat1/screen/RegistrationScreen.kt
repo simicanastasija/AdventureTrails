@@ -247,7 +247,7 @@ fun RegistrationScreen(
                             isLoading.value = false
                             LaunchedEffect(Unit) {
                                 navController?.navigate(Routes.loginScreen) {
-                                    popUpTo(Routes.userScreen) {
+                                    popUpTo(Routes.mapScreen) {
                                         inclusive = true
                                     }
                                 }

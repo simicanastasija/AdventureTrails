@@ -2,6 +2,7 @@ package com.example.projekat1.viewModel
 
 import android.annotation.SuppressLint
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -33,9 +34,19 @@ class UserAuthViewModel() : ViewModel()
     val currentUser: FirebaseUser?
         get() = repo.user
 
+
     fun getUserData() = viewModelScope.launch {
         val result = repo.getUser()
         _currentUserFlow.value = result
+    }
+
+    fun getCurrentUserId(): String? {
+        val currentUserResource = _currentUserFlow.value
+        return if (currentUserResource is Resource.Success) {
+            currentUserResource.result.id
+        } else {
+            null
+        }
     }
 
     fun getAllUsersData() = viewModelScope.launch {
@@ -70,7 +81,9 @@ class UserAuthViewModel() : ViewModel()
         _signInFlow.value = null
         _signUpFlow.value = null
         _currentUserFlow.value = null
+        Log.d("Izlogovan", "USPESNO");
     }
+
 }
 
 class UserAuthViewModelFactory : ViewModelProvider.Factory

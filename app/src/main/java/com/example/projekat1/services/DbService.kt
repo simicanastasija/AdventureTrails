@@ -1,6 +1,7 @@
 package com.example.projekat1.services
 
 
+import com.example.projekat1.models.Adventure
 import com.example.projekat1.models.User
 import com.example.projekat1.repositories.Resource
 import com.google.firebase.firestore.FirebaseFirestore
@@ -48,6 +49,18 @@ class DbService(
 
         }
         catch (e: Exception) {
+            e.printStackTrace()
+            Resource.Failure(e)
+        }
+    }
+
+    suspend fun saveAdventure(
+        adventure: Adventure
+    ): Resource<String>{
+        return try{
+            firestore.collection("adventures").add(adventure).await()
+            Resource.Success("Podaci o avanturi su uspesno sacuvani")
+        }catch(e: Exception){
             e.printStackTrace()
             Resource.Failure(e)
         }

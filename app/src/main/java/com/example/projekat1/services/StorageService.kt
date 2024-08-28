@@ -20,4 +20,22 @@ class StorageService( private val storage: FirebaseStorage)
             ""
         }
     }
+
+    suspend fun uploadAdventureImages(
+        images: List<Uri>
+    ): List<String>{
+        val downloadUrls = mutableListOf<String>()
+        for (image in images) {
+            try {
+                val fileName = "${System.currentTimeMillis()}.jpg"
+                val storageRef = storage.reference.child("adventure_images/$fileName")
+                val uploadTask = storageRef.putFile(image).await()
+                val downloadUrl = uploadTask.storage.downloadUrl.await()
+                downloadUrls.add(downloadUrl.toString())
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        return downloadUrls
+    }
 }

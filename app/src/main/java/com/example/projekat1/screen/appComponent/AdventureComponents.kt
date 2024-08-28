@@ -6,17 +6,25 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.RadioButton
 import androidx.compose.material.Text
+import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material3.Icon
@@ -117,20 +125,66 @@ fun LevelDropdownMenu(
     selectedLevel: String,
     onLevelSelected: (String) -> Unit
 ) {
-    DropdownMenu(
-        expanded = expanded,
-        onDismissRequest = onDismissRequest,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        listOf("Easy", "Moderate", "Hard").forEach { levelOption ->
-            DropdownMenuItem(
-                onClick = {
-                    onLevelSelected(levelOption)
-                    onDismissRequest()
+    Box(modifier = Modifier.fillMaxWidth()) {
+        TextField(
+            value = selectedLevel,
+            onValueChange = { /* No-op for readonly field */ },
+            readOnly = true,
+            placeholder = { Text("Select adventure level") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onDismissRequest() }
+        )
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = onDismissRequest,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            listOf("Easy", "Moderate", "Hard").forEach { levelOption ->
+                DropdownMenuItem(
+                    onClick = {
+                        onLevelSelected(levelOption)
+                        onDismissRequest()
+                    }
+                ) {
+                    Text(text = levelOption)
                 }
-            ) {
-                Text(text = levelOption)
             }
         }
     }
 }
+
+@Composable
+fun LevelSelection(
+    selectedLevel: String,
+    onLevelSelected: (String) -> Unit
+) {
+    val levels = listOf("Easy", "Moderate", "Hard")
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween // Distribute evenly across the row
+    ) {
+        levels.forEach { level ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(horizontal = 4.dp) // Minimal padding
+            ) {
+                RadioButton(
+                    selected = (level == selectedLevel),
+                    onClick = { onLevelSelected(level) },
+                    modifier = Modifier.size(16.dp) // Smaller radio buttons
+                )
+                Spacer(modifier = Modifier.width(4.dp)) // Space between radio button and text
+                Text(
+                    text = level,
+                    style = MaterialTheme.typography.body2 // Slightly smaller text
+                )
+            }
+        }
+    }
+}
+
+
+

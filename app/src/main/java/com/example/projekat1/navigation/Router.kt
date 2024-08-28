@@ -11,13 +11,15 @@ import androidx.navigation.compose.rememberNavController
 import com.example.projekat1.viewModel.UserAuthViewModel
 import com.example.projekat1.screen.LoginScreen
 import com.example.projekat1.screen.RegistrationScreen
-import com.example.projekat1.screen.UserScreen
+import com.example.projekat1.screen.MapScreen
+import com.example.projekat1.screen.SettingsScreen
+import com.example.projekat1.viewModel.AdventureViewModel
 import com.google.maps.android.compose.rememberCameraPositionState
 
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun Router ( viewModel: UserAuthViewModel)
+fun Router ( viewModel: UserAuthViewModel, adventureViewModel : AdventureViewModel)
 {
     val navController = rememberNavController()
 
@@ -29,10 +31,14 @@ fun Router ( viewModel: UserAuthViewModel)
             LoginScreen(viewModel = viewModel, navController = navController)
         }
 
-        composable(Routes.userScreen) {
-            UserScreen(viewModel = viewModel, navController = navController,
+        composable(Routes.mapScreen) {
+            MapScreen(viewModel = viewModel, adventureViewModel = adventureViewModel, navController = navController,
                 cameraPositionState = rememberCameraPositionState(),
                 myLocation = remember { mutableStateOf(null) })
+        }
+
+        composable(Routes.settingsScreen){
+            SettingsScreen(navController = navController)
         }
     }
 }

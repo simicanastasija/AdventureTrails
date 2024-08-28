@@ -70,6 +70,11 @@ fun LoginScreen(
 
     val backgroundImage: Painter = painterResource(id = R.drawable.pozadina) // Background image
 
+    val currentUser = remember {
+        mutableStateOf<User?>(null)
+    }
+    val currUserData = viewModel.currentUserFlow.collectAsState()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -186,7 +191,7 @@ fun LoginScreen(
                 )
             }
 
-            signInFlow.value?.let {
+            /*signInFlow.value?.let {
                 when (it) {
                     is Resource.Failure -> {
                         isLoading.value = false
@@ -195,12 +200,62 @@ fun LoginScreen(
                     is Resource.Success -> {
                         isLoading.value = false
                         LaunchedEffect(Unit) {
-                            navController.navigate(Routes.userScreen) {
+                            navController.navigate(Routes.mapScreen) {
                                 popUpTo(Routes.loginScreen) { inclusive = true }
                             }
                         }
                     }
                     is Resource.Loading -> { /* Show loading indicator if needed */ }
+                }
+            }*/
+            LaunchedEffect(signInFlow.value) {
+                when (val result = signInFlow.value) {
+                    is Resource.Failure -> {
+                        isLoading.value = false
+                        //Log.d("[ERROR]", result.exception.message.toString())
+                    }
+                    is Resource.Success -> {
+                        Log.d("[DEBUG]", "Login successful, fetching user data.")
+                        viewModel.getUserData()
+                    }
+                    is Resource.Loading -> {
+                        isLoading.value = true
+                        Log.d("[DEBUG]", "Loading...")
+                    }
+                    null -> {
+                        Log.d("[DEBUG]", "signInFlow is null")
+                    }
+                }
+            }
+
+            LaunchedEffect(currUserData.value) {
+                when (val userResource = currUserData.value) {
+                    is Resource.Success -> {
+                        Log.d("[DEBUG]", "User data fetched successfully.")
+                        val user = userResource.result
+                        isLoading.value = false
+
+
+                        val currUserJSON = Gson().toJson(user)
+                        //val encodedUsr = URLEncoder.encode(currUserJSON, StandardCharsets.UTF_8.toString())
+
+                        navController.navigate(Routes.mapScreen) {
+                            popUpTo(Routes.loginScreen) { inclusive = true }
+                        }
+
+                    }
+                    is Resource.Failure -> {
+                        Log.d("[DEBUG]", "Failed to fetch user data.")
+                        currentUser.value = null
+                        isLoading.value = false
+                    }
+                    is Resource.Loading -> {
+                        isLoading.value = true
+                        Log.d("[DEBUG]", "Loading user data...")
+                    }
+                    null -> {
+                        Log.d("[DEBUG]", "currUserData is null")
+                    }
                 }
             }
         }

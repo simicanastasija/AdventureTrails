@@ -22,16 +22,22 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.BottomAppBar
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.FloatingActionButtonDefaults
 import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.FormatListNumbered
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -44,7 +50,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.app.ActivityCompat
@@ -86,7 +94,10 @@ fun MapScreen(
     val selectedAdventure = remember { mutableStateOf<Adventure?>(null) }
 
     val currentUserId by remember { mutableStateOf(viewModel.getCurrentUserId()) }
-
+    val sharedPreferences = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+    val isTrackingServiceEnabled = sharedPreferences.getBoolean("tracking_location", true)
+    val lastLatitude = sharedPreferences.getString("last_latitude", null)?.toDoubleOrNull()
+    val lastLongitude = sharedPreferences.getString("last_longitude", null)?.toDoubleOrNull()
 
     adventureCollection.value.let {
         when (it) {
@@ -94,12 +105,15 @@ fun MapScreen(
                 adventuresList.clear()
                 adventuresList.addAll(it.result)
             }
+
             is Resource.Loading -> {
                 Log.d("MapScreen", "Loading adventures...")
             }
+
             is Resource.Failure -> {
                 Log.e("MapScreen", "Failed to load adventures:")
             }
+
             null -> {
                 Log.d("MapScreen", "No adventure available")
             }
@@ -107,6 +121,12 @@ fun MapScreen(
     }
 
     Log.d("MapScreen", "MapScreen Composable Started")
+
+    if (!isTrackingServiceEnabled && lastLatitude != null && lastLongitude != null) {
+        val lastLocation = LatLng(lastLatitude, lastLongitude)
+        // Use lastLocation as the position of the map
+        cameraPositionState.position = CameraPosition.fromLatLngZoom(lastLocation, 17f)
+    }
 
     // Check location permissions and start LocationService
     if (ActivityCompat.checkSelfPermission(
@@ -140,21 +160,13 @@ fun MapScreen(
     val receiver = remember {
         object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
-                // Log.d("MapScreen", "BroadcastReceiver received update")
 
                 if (intent?.action == LocationService.ACTION_LOCATION_UPDATE) {
                     val latitude =
                         intent.getDoubleExtra(LocationService.EXTRA_LOCATION_LATITUDE, 0.0)
                     val longitude =
                         intent.getDoubleExtra(LocationService.EXTRA_LOCATION_LONGITUDE, 0.0)
-                    //azuriranje camera position
                     myLocation.value = LatLng(latitude, longitude)
-                    //cameraPositionState.position =
-                    //CameraPosition.fromLatLngZoom(LatLng(latitude, longitude), 17f)
-//                    Log.d(
-//                        "MapScreen",
-//                        "Location updated: Latitude: $latitude, Longitude: $longitude"
-//                    )
                 }
             }
         }
@@ -162,13 +174,9 @@ fun MapScreen(
 
     // Register the receiver
     DisposableEffect(context) {
-        //Log.d("MapScreen", "Registering BroadcastReceiver")
-
         LocalBroadcastManager.getInstance(context)
             .registerReceiver(receiver, IntentFilter(LocationService.ACTION_LOCATION_UPDATE))
         onDispose {
-            //Log.d("MapScreen", "Unregistering BroadcastReceiver")
-
             LocalBroadcastManager.getInstance(context).unregisterReceiver(receiver)
         }
     }
@@ -208,8 +216,9 @@ fun MapScreen(
             }
 
             adventuresList.forEach { adventure ->
-                val adventureLocation = LatLng(adventure.location.latitude, adventure.location.longitude)
-                val user= adventure.userId
+                val adventureLocation =
+                    LatLng(adventure.location.latitude, adventure.location.longitude)
+                val user = adventure.userId
                 val markerIcon = if (adventure.userId == currentUserId) {
                     bitmapDescriptorFromVector2(context, R.drawable.markeravantura)
                 } else {
@@ -237,37 +246,57 @@ fun MapScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(color = Color.White)
-                .padding(16.dp)
+                .background(color = Color(0xD0E5D6B3)) // Set the header background color
+                .padding(horizontal = 8.dp, vertical = 4.dp) // Reduced padding
         ) {
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
+                    .fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Adventure App", style = MaterialTheme.typography.h6)
-                Button(
-                    onClick = {
-                        viewModel.logOut()
-                        navController.navigate("loginScreen") {
-                            popUpTo("mapScreen") { inclusive = true }
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red)
-                ) {
-                    Text("Log Out", color = Color.White)
+                Text(
+                    text = "AdventureTrails",
+                    style = MaterialTheme.typography.h6.copy(fontSize = 18.sp) // Smaller font size
+                )
+
+                Row {
+                    // Settings Button
+                    Button(
+                        onClick = {
+                            navController.navigate("settingsScreen")
+                        },
+                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF6D4C41)), // Brown color
+                        modifier = Modifier.padding(end = 4.dp) // Reduced space between buttons
+                    ) {
+                        Text("Settings", color = Color.White, fontSize = 14.sp) // Smaller text size
+                    }
+
+                    // Log Out Button
+                    Button(
+                        onClick = {
+                            viewModel.logOut()
+                            navController.navigate("loginScreen") {
+                                popUpTo("mapScreen") { inclusive = true }
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF6D4C41)) // Brown color
+                    ) {
+                        Text("Log Out", color = Color.White, fontSize = 14.sp) // Smaller text size
+                    }
                 }
             }
         }
 
+
+
         FloatingActionButton(
             onClick = { showDialog.value = true },
             modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp),
-            backgroundColor = MaterialTheme.colors.primary
+                .align(Alignment.BottomStart)
+                .padding(bottom = 60.dp, start = 16.dp),
+            backgroundColor = Color(0xC2D4C4B0),
+            elevation = FloatingActionButtonDefaults.elevation(0.dp)
         ) {
             Icon(Icons.Filled.Add, contentDescription = "Add Adventure")
         }
@@ -296,8 +325,11 @@ fun MapScreen(
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(16.dp)
-                    .background(Color.White, RoundedCornerShape(8.dp))
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .background(
+                        Color(0xFFB9FBC0),
+                        RoundedCornerShape(12.dp)
+                    ) // Light green background
                     .fillMaxWidth()
                     .height(150.dp)
             ) {
@@ -321,24 +353,112 @@ fun MapScreen(
                     ) {
                         Text(
                             text = adventure.title,
-                            style = MaterialTheme.typography.body1,
-                            color = Color.Black
+                            style = MaterialTheme.typography.body1.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF2E7D32) // Match header color
+                            )
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Type: ${adventure.type}",
-                            style = MaterialTheme.typography.body1,
-                            color = Color.Gray
+                            style = MaterialTheme.typography.body2.copy(
+                                color = Color.Gray
+                            )
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Level: ${adventure.level}",
-                            style = MaterialTheme.typography.body1,
-                            color = Color.Gray
+                            style = MaterialTheme.typography.body2.copy(
+                                color = Color.Gray
+                            )
                         )
                     }
                 }
             }
         }
+        BottomAppBar(
+            backgroundColor = Color(0xFFE5D6B3), // Color same as header
+            contentColor = Color.Black,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(0.dp)
+        ) {
+            // Map icon
+            IconButton(
+                onClick = {
+                    navController.navigate("mapScreen") {
+                        popUpTo("mapScreen") { inclusive = true }
+                    }
+                },
+                modifier = Modifier.weight(1f)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Map,
+                        contentDescription = "Map",
+                        tint = Color.Black
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Map",
+                        style = MaterialTheme.typography.body2
+                    )
+                }
+            }
+
+            // Rank icon
+            IconButton(
+                onClick = {
+                    navController.navigate("rankScreen") {
+                        popUpTo("mapScreen") { inclusive = true }
+                    }
+                },
+                modifier = Modifier.weight(1f)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.FormatListNumbered, // Placeholder for rank icon
+                        contentDescription = "Rank",
+                        tint = Color.Black
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Rank",
+                        style = MaterialTheme.typography.body2
+                    )
+                }
+            }
+
+            // Profile icon
+            IconButton(
+                onClick = {
+                    navController.navigate("profileScreen") {
+                        popUpTo("mapScreen") { inclusive = true }
+                    }
+                },
+                modifier = Modifier.weight(1f)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Person,
+                        contentDescription = "Profile",
+                        tint = Color.Black
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Profile",
+                        style = MaterialTheme.typography.body2
+                    )
+                }
+            }
+        }
     }
+
 }
+
