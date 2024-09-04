@@ -1,6 +1,9 @@
 package com.example.projekat1.screen
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.layout.*
@@ -11,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.icons.filled.Search
 
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,13 +31,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.projekat1.navigation.Routes.adventureDetailsScreen
 
-@SuppressLint("MutableCollectionMutableState")
 @Composable
 fun TableScreen(adventureViewModel: AdventureViewModel, navController: NavController) {
     val adventures by adventureViewModel.adventures.collectAsState()
     val userFullNames by remember { mutableStateOf(adventureViewModel._userFullNames) }
-    val adventureImages by remember { mutableStateOf(adventureViewModel.adventureImages) }
+    var searchText by remember { mutableStateOf("") }
+    var isSearchActive by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         adventureViewModel.getAllAdventures()
@@ -42,11 +47,24 @@ fun TableScreen(adventureViewModel: AdventureViewModel, navController: NavContro
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("All Adventures on Map") },
+                title = {
+                    if (isSearchActive) {
+                        TextField(
+                            value = searchText,
+                            onValueChange = { searchText = it },
+                            placeholder = { Text("Search by title") },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = TextFieldDefaults.textFieldColors(
+                                backgroundColor = Color.White
+                            )
+                        )
+                    } else {
+                        Text("All Adventures on Map")
+                    }
+                },
                 backgroundColor = Color(0xFFE5D6B3),
                 navigationIcon = {
                     IconButton(onClick = {
-                       // navController.navigateUp() // Vraća korisnika na prethodni ekran
                         navController.navigate("mapScreen") {
                             popUpTo("tableScreen") { inclusive = true }
                         }
@@ -54,6 +72,20 @@ fun TableScreen(adventureViewModel: AdventureViewModel, navController: NavContro
                         Icon(
                             imageVector = Icons.Filled.ArrowBackIosNew,
                             contentDescription = "Back"
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = {
+                        if (isSearchActive) {
+                            // Reset search text and close search
+                            searchText = ""
+                        }
+                        isSearchActive = !isSearchActive
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.Search,
+                            contentDescription = "Search"
                         )
                     }
                 }
@@ -73,12 +105,21 @@ fun TableScreen(adventureViewModel: AdventureViewModel, navController: NavContro
                     is Resource.Success -> {
                         val adventureList = (adventures as Resource.Success<List<Adventure>>).result
 
+                        // Filter adventures based on searchText
+                        val filteredAdventures = adventureList.filter {
+                            it.title.contains(searchText, ignoreCase = true)
+                        }
+
                         LazyColumn {
-                            items(adventureList) { adventure ->
-                                AdventureRow(adventure, userFullNames)
-                                Divider()
+                            items(filteredAdventures) { adventure ->
+                                AdventureRow(adventure, userFullNames, navController)
+                                Divider(
+                                    color = Color.Gray, // Promeni boju prema tvojoj temi
+                                    thickness = 2.dp
+                                )
                             }
                         }
+
                     }
                     is Resource.Failure -> {
                         Text(
@@ -100,12 +141,11 @@ fun TableScreen(adventureViewModel: AdventureViewModel, navController: NavContro
 }
 
 
-
-
 @Composable
 fun AdventureRow(
     adventure: Adventure,
     userFullNames: Map<String, String>,
+    navController: NavController // Add navController to navigate to details
 ) {
     Row(
         modifier = Modifier
@@ -114,7 +154,7 @@ fun AdventureRow(
             .padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Prikaži prvu sliku iz liste ako postoji
+        // Show the first image from the list if available
         val imageUri = adventure.adventureImages.firstOrNull()
 
         imageUri?.let {
@@ -160,14 +200,17 @@ fun AdventureRow(
                 .align(Alignment.Bottom)
         ) {
             Button(
-                onClick = { /* Your click action here */ },
+                onClick = {
+                    // Navigate to the AdventureDetailsScreen, passing the adventure ID
+                    navController.navigate("adventureDetailsScreen/${adventure.id}")
+                },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .height(30.dp)
                     .padding(horizontal = 6.dp),
                 colors = ButtonDefaults.buttonColors(
-                    backgroundColor = Color(0xFF8B4513), // Boja pozadine
-                    contentColor = Color.White // Boja teksta
+                    backgroundColor = Color(0xFF8B4513), // Background color
+                    contentColor = Color.White // Text color
                 )
             ) {
                 Text(
@@ -178,9 +221,10 @@ fun AdventureRow(
                 )
             }
         }
-
     }
 }
+
+
 
 
 

@@ -3,6 +3,8 @@ package com.example.projekat1.repositories
 import com.google.android.gms.maps.model.LatLng
 import android.net.Uri
 import com.example.projekat1.models.Adventure
+import com.example.projekat1.models.Comment
+import kotlinx.coroutines.flow.Flow
 
 interface AdventureRepository {
 
@@ -12,7 +14,8 @@ interface AdventureRepository {
         description: String,
         type: String,
         level: String,
-        adventureImages: List<Uri>
+        adventureImages: List<Uri>,
+        //checked: "yes"
 
     ): Resource<String>
 
@@ -22,4 +25,11 @@ interface AdventureRepository {
     ): Resource<List<Adventure>>
 
     suspend fun getUserFullName(userId: String): Resource<String>
+    fun getAdventureById(adventureId: String): Flow<Resource<Adventure>>
+
+
+    suspend fun addCommentToAdventure(uid: String, adventureId: String, comment: Comment)
+    suspend fun markAdventureAsVisited(adventureId: String, userId: String, level: String)
+    suspend fun getCommentsForAdventures(adventureId: String): List<Comment>
+
 }

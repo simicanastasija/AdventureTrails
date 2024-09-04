@@ -11,11 +11,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -67,13 +70,9 @@ fun LoginScreen(
 
     val isLoading = remember { mutableStateOf(false) }
     val signInFlow = viewModel.signInFlow.collectAsState()
+    val currUserData = viewModel.currentUserFlow.collectAsState()
 
     val backgroundImage: Painter = painterResource(id = R.drawable.pozadina) // Background image
-
-    val currentUser = remember {
-        mutableStateOf<User?>(null)
-    }
-    val currUserData = viewModel.currentUserFlow.collectAsState()
 
     Box(
         modifier = Modifier
@@ -87,17 +86,19 @@ fun LoginScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0x30000000)) // Semi-transparent background
-                .padding(start = 30.dp, end = 30.dp, top = 14.dp, bottom = 14.dp),
-            contentAlignment = Alignment.Center
+                .padding(start = 30.dp, end = 30.dp, top = 14.dp, bottom = 14.dp)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xE6F0F8E7), shape = RoundedCornerShape(16.dp)) // Light matte green
-                    .border(1.dp, Color(0xFF9CDB8E), shape = RoundedCornerShape(16.dp)) // Border
+                    .background(
+                        color = Color(0xE6F0F8E7).copy(alpha = 0.9f),
+                        shape = RoundedCornerShape(16.dp)
+                    ) // Light matte green
+                    .border(1.dp, Color((0xFFBFAE94)), shape = RoundedCornerShape(16.dp)) // Border
                     .padding(16.dp)
                     .verticalScroll(rememberScrollState())
+                    .align(Alignment.Center)
             ) {
                 Spacer(modifier = Modifier.height(32.dp))
 
@@ -158,7 +159,6 @@ fun LoginScreen(
                                 email = email.value,
                                 password = password.value
                             )
-
                         }
                     },
                     enabled = !isLoading.value,
@@ -191,77 +191,79 @@ fun LoginScreen(
                 )
             }
 
-            /*signInFlow.value?.let {
-                when (it) {
-                    is Resource.Failure -> {
-                        isLoading.value = false
-                        Log.e("[ERROR]", it.exception.message.toString())
-                    }
-                    is Resource.Success -> {
-                        isLoading.value = false
-                        LaunchedEffect(Unit) {
-                            navController.navigate(Routes.mapScreen) {
-                                popUpTo(Routes.loginScreen) { inclusive = true }
-                            }
-                        }
-                    }
-                    is Resource.Loading -> { /* Show loading indicator if needed */ }
-                }
-            }*/
-            LaunchedEffect(signInFlow.value) {
-                when (val result = signInFlow.value) {
-                    is Resource.Failure -> {
-                        isLoading.value = false
-                        //Log.d("[ERROR]", result.exception.message.toString())
-                    }
-                    is Resource.Success -> {
-                        Log.d("[DEBUG]", "Login successful, fetching user data.")
-                        viewModel.getUserData()
-                    }
-                    is Resource.Loading -> {
-                        isLoading.value = true
-                        Log.d("[DEBUG]", "Loading...")
-                    }
-                    null -> {
-                        Log.d("[DEBUG]", "signInFlow is null")
-                    }
-                }
-            }
-
-            LaunchedEffect(currUserData.value) {
-                when (val userResource = currUserData.value) {
-                    is Resource.Success -> {
-                        Log.d("[DEBUG]", "User data fetched successfully.")
-                        val user = userResource.result
-                        isLoading.value = false
-
-
-                        val currUserJSON = Gson().toJson(user)
-                        //val encodedUsr = URLEncoder.encode(currUserJSON, StandardCharsets.UTF_8.toString())
-
-                        navController.navigate(Routes.mapScreen) {
-                            popUpTo(Routes.loginScreen) { inclusive = true }
-                        }
-
-                    }
-                    is Resource.Failure -> {
-                        Log.d("[DEBUG]", "Failed to fetch user data.")
-                        currentUser.value = null
-                        isLoading.value = false
-                    }
-                    is Resource.Loading -> {
-                        isLoading.value = true
-                        Log.d("[DEBUG]", "Loading user data...")
-                    }
-                    null -> {
-                        Log.d("[DEBUG]", "currUserData is null")
+            // Show loading indicator with transparent background
+            if (isLoading.value) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .wrapContentSize(Alignment.Center)
+                        .padding(16.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(100.dp)
+                            .background(Color((0xFFBFAE94)), shape = RoundedCornerShape(8.dp))
+                            .wrapContentSize(Alignment.Center)
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .size(50.dp),
+                            strokeWidth = 4.dp
+                        )
                     }
                 }
             }
         }
     }
-}
 
+    LaunchedEffect(signInFlow.value) {
+        when (val result = signInFlow.value) {
+            is Resource.Failure -> {
+                isLoading.value = false
+                // Handle failure
+                Log.e("[ERROR]", result.exception.message.toString())
+            }
+            is Resource.Success -> {
+                Log.d("[DEBUG]", "Login successful, fetching user data.")
+                viewModel.getUserData()
+            }
+            is Resource.Loading -> {
+                isLoading.value = true
+                Log.d("[DEBUG]", "Loading...")
+            }
+            null -> {
+                Log.d("[DEBUG]", "signInFlow is null")
+            }
+        }
+    }
+
+    LaunchedEffect(currUserData.value) {
+        when (val userResource = currUserData.value) {
+            is Resource.Success -> {
+                Log.d("[DEBUG]", "User data fetched successfully.")
+                val user = userResource.result
+                isLoading.value = false
+
+                val currUserJSON = Gson().toJson(user)
+
+                navController.navigate(Routes.mapScreen) {
+                    popUpTo(Routes.loginScreen) { inclusive = true }
+                }
+            }
+            is Resource.Failure -> {
+                Log.d("[DEBUG]", "Failed to fetch user data.")
+                isLoading.value = false
+            }
+            is Resource.Loading -> {
+                isLoading.value = true
+                Log.d("[DEBUG]", "Loading user data...")
+            }
+            null -> {
+                Log.d("[DEBUG]", "currUserData is null")
+            }
+        }
+    }
+}
 
 
 

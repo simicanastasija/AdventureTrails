@@ -23,6 +23,7 @@ import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.RadioButton
+import androidx.compose.material.RadioButtonDefaults
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
@@ -118,42 +119,7 @@ fun UploadAdventureImages(
 
 
 
-@Composable
-fun LevelDropdownMenu(
-    expanded: Boolean,
-    onDismissRequest: () -> Unit,
-    selectedLevel: String,
-    onLevelSelected: (String) -> Unit
-) {
-    Box(modifier = Modifier.fillMaxWidth()) {
-        TextField(
-            value = selectedLevel,
-            onValueChange = { /* No-op for readonly field */ },
-            readOnly = true,
-            placeholder = { Text("Select adventure level") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onDismissRequest() }
-        )
 
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = onDismissRequest,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            listOf("Easy", "Moderate", "Hard").forEach { levelOption ->
-                DropdownMenuItem(
-                    onClick = {
-                        onLevelSelected(levelOption)
-                        onDismissRequest()
-                    }
-                ) {
-                    Text(text = levelOption)
-                }
-            }
-        }
-    }
-}
 
 @Composable
 fun LevelSelection(
@@ -161,30 +127,44 @@ fun LevelSelection(
     onLevelSelected: (String) -> Unit
 ) {
     val levels = listOf("Easy", "Moderate", "Hard")
+    val selectedColor = Color(0xFF6A9F5B) // Subtle matte green
+    val unselectedColor = Color.Gray // Gray for unselected items
 
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween // Distribute evenly across the row
+        horizontalArrangement = Arrangement.SpaceBetween, // Distribute evenly across the row
+        verticalAlignment = Alignment.CenterVertically // Center vertically
     ) {
         levels.forEach { level ->
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 4.dp) // Minimal padding
+                modifier = Modifier
+                    .padding(horizontal = 4.dp) // Minimal padding
+                    .clickable { onLevelSelected(level) } // Handle click
             ) {
                 RadioButton(
                     selected = (level == selectedLevel),
-                    onClick = { onLevelSelected(level) },
-                    modifier = Modifier.size(16.dp) // Smaller radio buttons
+                    onClick = null, // Disable internal click handling
+                    modifier = Modifier.size(16.dp), // Smaller radio buttons
+                    colors = RadioButtonDefaults.colors(
+                        selectedColor = selectedColor, // Apply subtle green when selected
+                        unselectedColor = unselectedColor // Gray for unselected
+                    )
                 )
                 Spacer(modifier = Modifier.width(4.dp)) // Space between radio button and text
                 Text(
                     text = level,
-                    style = MaterialTheme.typography.body2 // Slightly smaller text
+                    style = MaterialTheme.typography.body2.copy( // Slightly smaller text
+                        color = if (level == selectedLevel) selectedColor else Color.Black
+                    )
                 )
             }
         }
     }
 }
+
+
+
 
 
 

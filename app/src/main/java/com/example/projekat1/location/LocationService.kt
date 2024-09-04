@@ -81,7 +81,7 @@ class LocationService : Service() {
     private fun start(
         advnearby: Boolean = false
     ) {
-        locationClient.getLocationUpdates(1000L)
+        locationClient.getLocationUpdates(10000L)
             .catch { e -> e.printStackTrace() }
             .onEach { location ->
                 sharedPreferences.edit()
@@ -160,26 +160,45 @@ class LocationService : Service() {
             return distance
         }
 
-    private fun checkProximityToAdventures(latitude: Double, longitude: Double) {
+
+    private fun checkProximityToAdventures(userLatitude: Double, userLongitude: Double) {
         val firestore = FirebaseFirestore.getInstance()
-        firestore.collection("adventures").get()
-            .addOnSuccessListener { result ->
-                for (document in result) {
-                    val geoPoint = document.getGeoPoint("location")
-                    geoPoint?.let {
-                        val distance = calculateHaversineDistance(latitude, longitude, it.latitude, it.longitude)
-                        if (distance <= 1000 && !adventuresWithoutDuplicates.contains(document.id)) {
-                            alertAdventureNearby(document.getString("title") ?: "Adventure")
-                            adventuresWithoutDuplicates.add(document.id)
-                            Log.d("U blizini", document.toString())
+        val authRepository = AuthRepository()
+
+        serviceScope.launch {
+            val userResource = authRepository.getUser()
+
+            if (userResource is Resource.Success) {
+                val currentUser = userResource.result
+
+                firestore.collection("adventures").get()
+                    .addOnSuccessListener { result ->
+                        for (document in result) {
+                            val geoPoint = document.getGeoPoint("location")
+                            val adventureUserId = document.getString("userId")
+
+                            // Proveri da li je avantura dostupna i da li pripada nekom drugom korisniku
+                            if (geoPoint != null  && (currentUser == null || adventureUserId != currentUser.id)) {
+                                val distance = calculateHaversineDistance(userLatitude, userLongitude, geoPoint.latitude, geoPoint.longitude)
+
+                                if (distance <= 1000 && !adventuresWithoutDuplicates.contains(document.id)) {
+                                    alertAdventureNearby(document.getString("title") ?: "Adventure")
+                                    adventuresWithoutDuplicates.add(document.id)
+                                    Log.d("NearbyBook", document.toString())
+                                }
+                            }
                         }
                     }
-                }
+                    .addOnFailureListener { e ->
+                        Log.e("LocationService", "Error fetching adventures", e)
+                    }
+            } else {
+                Log.e("LocationService", "Failed to fetch current user: ${(userResource as Resource.Failure).exception.message}")
             }
-            .addOnFailureListener { e ->
-                Log.e("LocationService", "Error fetching beaches", e)
-            }
+        }
     }
+
+
 
 
     private fun alertAdventureNearby(adventureTitle: String) {

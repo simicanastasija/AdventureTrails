@@ -11,6 +11,7 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,10 +22,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.BottomAppBar
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.FloatingActionButtonDefaults
@@ -35,12 +38,14 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.FormatListNumbered
 import androidx.compose.material.icons.filled.LogoDev
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.TableChart
 import androidx.compose.runtime.Composable
@@ -51,6 +56,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -104,6 +110,8 @@ fun MapScreen(
     val lastLatitude = sharedPreferences.getString("last_latitude", null)?.toDoubleOrNull()
     val lastLongitude = sharedPreferences.getString("last_longitude", null)?.toDoubleOrNull()
 
+
+
     adventureCollection.value.let {
         when (it) {
             is Resource.Success -> {
@@ -122,6 +130,11 @@ fun MapScreen(
             null -> {
                 Log.d("MapScreen", "No adventure available")
             }
+
+            is Resource.Failure -> TODO()
+            Resource.Loading -> TODO()
+            is Resource.Success -> TODO()
+            else -> {}
         }
     }
 
@@ -197,6 +210,10 @@ fun MapScreen(
         }
     }
 
+    fun refreshAdventures() {
+        adventureViewModel.getAllAdventures() // Call the method to get all adventures without filters
+    }
+
 
     Box(modifier = Modifier.fillMaxSize()) {
         GoogleMap(
@@ -245,7 +262,7 @@ fun MapScreen(
 
         }
 
-        // Header with Sign Out Button
+//Heder
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -258,35 +275,38 @@ fun MapScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Left side: Search icon
-                IconButton(
-                    onClick = {
-                        // Add search action here
-                    }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
-                        tint = Color.Black
-                    )
-                }
 
                 // Center: Title
+                Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = "AdventureTrails",
-                    style = MaterialTheme.typography.h6.copy(fontSize = 18.sp) // Smaller font size
+                    style = MaterialTheme.typography.h6.copy(fontSize = 20.sp) // Smaller font size
                 )
 
-                // Right side: Icons for filter, table, and log off
+
                 Row {
                     IconButton(
                         onClick = {
-                            // Add filter action here
+                            navController.navigate("filtersScreen/${myLocation.value?.latitude}/${myLocation.value?.longitude}") {
+                                popUpTo("mapScreen") { inclusive = false }
+                            }
                         }
                     ) {
                         Icon(
-                            imageVector = Icons.Default.FilterList, // Replace with actual filter icon
+                            imageVector = Icons.Default.FilterList,
                             contentDescription = "Filter",
+                            tint = Color.Black
+                        )
+                    }
+
+                    IconButton(
+                        onClick = {
+                            refreshAdventures()
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh, // Use appropriate icon
+                            contentDescription = "Refresh",
                             tint = Color.Black
                         )
                     }
@@ -301,21 +321,6 @@ fun MapScreen(
                         Icon(
                             imageVector = Icons.Default.TableChart, // Replace with actual table icon
                             contentDescription = "Table",
-                            tint = Color.Black
-                        )
-                    }
-
-                    IconButton(
-                        onClick = {
-                            viewModel.logOut()
-                            navController.navigate("loginScreen") {
-                                popUpTo("mapScreen") { inclusive = true }
-                            }
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.LogoDev, // Replace with actual log off icon ZAMENII
-                            contentDescription = "Log Out",
                             tint = Color.Black
                         )
                     }
@@ -357,17 +362,21 @@ fun MapScreen(
             )
         }
         selectedAdventure.value?.let { adventure ->
-            // Display a details window at the bottom of the screen
+            // Display a details window above the footer
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(horizontal = 16.dp, vertical = 70.dp) // Add padding to move it above the footer
                     .background(
-                        Color(0xFFB9FBC0),
+                        Color.LightGray.copy(alpha = 0.7f),
                         RoundedCornerShape(12.dp)
-                    ) // Light green background
+                    ) // White background
                     .fillMaxWidth()
                     .height(150.dp)
+                    .clickable {
+                        // Navigate to detailed adventure screen
+                         navController.navigate("adventureDetailsScreen/${adventure.id}")
+                    }
             ) {
                 Row(modifier = Modifier.fillMaxSize()) {
                     adventure.adventureImages.firstOrNull()?.let { imageUri ->
@@ -391,7 +400,7 @@ fun MapScreen(
                             text = adventure.title,
                             style = MaterialTheme.typography.body1.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF2E7D32) // Match header color
+                                color = Color.Black
                             )
                         )
                         Spacer(modifier = Modifier.height(4.dp))
@@ -410,8 +419,23 @@ fun MapScreen(
                         )
                     }
                 }
+                // Add a close button at the top-right corner
+                IconButton(
+                    onClick = { selectedAdventure.value = null }, // Close the window
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = Color.Gray
+                    )
+                }
             }
         }
+
+
 
         //Footer
         BottomAppBar(
@@ -450,7 +474,7 @@ fun MapScreen(
             IconButton(
                 onClick = {
                     navController.navigate("rankScreen") {
-                        popUpTo("mapScreen") { inclusive = true }
+                        popUpTo("mapScreen") { inclusive = false }
                     }
                 },
                 modifier = Modifier.weight(1f)

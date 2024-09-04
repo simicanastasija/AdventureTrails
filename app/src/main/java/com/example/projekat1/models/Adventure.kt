@@ -11,5 +11,16 @@ data class Adventure (
     val description: String= "",
     val type: String= "",
     val level: String= "", // nivo tezine kao ispuniti avanturu lako, umereno i tesko
-    val adventureImages: List<String> = emptyList()
+    val adventureImages: List<String> = emptyList(),
+    val isVisited: Boolean = false,
+    val comments: List<Comment> = emptyList(),
+    val visitedUsers: List<String> = emptyList()
 )
+
+data class Comment(
+    val userId: String = "",
+    val userName: String = "",
+    val timestamp: Long = 0L,
+    val text: String = ""
+)
+

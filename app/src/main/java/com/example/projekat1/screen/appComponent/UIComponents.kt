@@ -279,7 +279,7 @@ fun Heading(text: String) {
 
 @Composable
 fun CustomLabel(label: String) {
-    Text(text = label, color = Color.Gray)
+    Text(text = label, color = Color.Black)
 }
 
 @Composable

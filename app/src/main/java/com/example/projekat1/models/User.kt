@@ -8,5 +8,6 @@ data class User(
     val password: String = "", //?
     val fullName: String = "",
     val phoneNumber: String = "",
-    val profileImg: String = ""
+    val profileImg: String = "",
+    val totalPoints: Int = 0
 )
